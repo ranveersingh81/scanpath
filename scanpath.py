@@ -58,8 +58,8 @@ def rscasim(s, t, center_x, center_y, viewing_distance, unit_size, modulator=0.8
     t = pd.concat([t, inverse_gnomonic(t['fixation_position_x'], t['fixation_position_y'], center_x, center_y, viewing_distance, unit_size)], axis=1)
 
     d = np.zeros((len(s) + 1, len(t) + 1))
-    d[:, 0] = np.cumsum([0] + list(s['fixation_duration']))
-    d[0, :] = np.cumsum([0] + list(t['fixation_duration']))
+    d[:, 0] = np.cumsum(list(s['fixation_duration']) + [0])
+    d[0, :] = np.cumsum(list(t['fixation_duration'])+ [0])
 
 
     path = np.zeros((len(s) + 1, len(t) + 1))
@@ -80,6 +80,7 @@ def rscasim(s, t, center_x, center_y, viewing_distance, unit_size, modulator=0.8
             operations = [d[i-1, j] + s['fixation_duration'][i-1], d[i, j-1] + t['fixation_duration'][j-1], d[i-1, j-1] + cost]
             path[i, j] = np.argmin(operations)
             d[i, j] = min(operations)
+
     a = extract_alignment(d, path)
     # assert np.sum(a['cost']) == d[-1, -1]
     return(d, path, a)
