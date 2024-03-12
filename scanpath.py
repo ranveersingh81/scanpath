@@ -52,14 +52,14 @@ def extract_alignment(d, path):
 
 
 def rscasim(s, t, center_x, center_y, viewing_distance, unit_size, modulator=0.83):
-    s = s[['duration', 'x', 'y']]
-    t = t[['duration', 'x', 'y']]
-    s = pd.concat([s, inverse_gnomonic(s['x'], s['y'], center_x, center_y, viewing_distance, unit_size)], axis=1)
-    t = pd.concat([t, inverse_gnomonic(t['x'], t['y'], center_x, center_y, viewing_distance, unit_size)], axis=1)
+    s = s[['fixation_duration', 'fixation_position_x', 'fixation_position_y']]
+    t = t[['fixation_duration', 'fixation_position_x', 'fixation_position_y']]
+    s = pd.concat([s, inverse_gnomonic(s['fixation_position_x'], s['fixation_position_y'], center_x, center_y, viewing_distance, unit_size)], axis=1)
+    t = pd.concat([t, inverse_gnomonic(t['fixation_position_x'], t['fixation_position_y'], center_x, center_y, viewing_distance, unit_size)], axis=1)
 
     d = np.zeros((len(s) + 1, len(t) + 1))
-    d[:, 0] = np.cumsum([0] + list(s['duration']))
-    d[0, :] = np.cumsum([0] + list(t['duration']))
+    d[:, 0] = np.cumsum([0] + list(s['fixation_duration']))
+    d[0, :] = np.cumsum([0] + list(t['fixation_duration']))
 
 
     path = np.zeros((len(s) + 1, len(t) + 1))
@@ -76,8 +76,8 @@ def rscasim(s, t, center_x, center_y, viewing_distance, unit_size, modulator=0.8
             tb = t['lat'][j-1] / (180/np.pi)
             angle = np.arccos(np.sin(sb) * np.sin(tb) + np.cos(sb) * np.cos(tb) * np.cos(sa - ta)) * (180/np.pi)
             mixer = modulator**angle
-            cost = abs(t['duration'][j-1] - s['duration'][i-1]) * mixer + (t['duration'][j-1] + s['duration'][i-1]) * (1 - mixer)
-            operations = [d[i-1, j] + s['duration'][i-1], d[i, j-1] + t['duration'][j-1], d[i-1, j-1] + cost]
+            cost = abs(t['fixation_duration'][j-1] - s['fixation_duration'][i-1]) * mixer + (t['fixation_duration'][j-1] + s['fixation_duration'][i-1]) * (1 - mixer)
+            operations = [d[i-1, j] + s['fixation_duration'][i-1], d[i, j-1] + t['fixation_duration'][j-1], d[i-1, j-1] + cost]
             path[i, j] = np.argmin(operations)
             d[i, j] = min(operations)
     a = extract_alignment(d, path)
