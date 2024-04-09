@@ -54,8 +54,8 @@ def get_scanpath(scan_record):
 
 
 
-def get_output(filecomb, out_dict):
-    print(filecomb)
+def get_output(filecomb):
+    out_dict = {}
     center_x = 840
     center_y = 525
     distance = 61
@@ -65,12 +65,12 @@ def get_output(filecomb, out_dict):
     score, path, alignment, path_df  = scp.rscasim(scanpath1, scanpath2, center_x, center_y, distance, unit, modulator=0.83)
     out_dict[filecomb[0] + "_" + filecomb[1]] = (score, path, alignment, path_df)
 
+    with open('/content/drive/MyDrive/scanpath_data/scanpath_comparisons/' + filecomb[0] + "_" + filecomb[1] + ".pickle", 'wb') as handle:
+        pickle.dump(out_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
 
 
 if __name__ == "__main__":
-
-    manager = mp.Manager()
-    out_dict = manager.dict()
     files = master_df['file'].unique()
     texts = master_df['text_id'].unique()
     persons = master_df['reader_id'].unique()
@@ -95,6 +95,3 @@ if __name__ == "__main__":
             for proc in process:
                 proc.terminate()
             process.clear()
-
-        with open('/content/drive/MyDrive/scanpath_data/output.pickle', 'wb') as handle:
-            pickle.dump(dict(out_dict), handle, protocol=pickle.HIGHEST_PROTOCOL)
