@@ -7,13 +7,14 @@ from multiprocessing import Pool
 import multiprocessing as mp
 
 def get_file_data(file):
-    file_path = os.path.join('/content/scanpath_data/scanpaths/', file)
+    file_path = os.path.join('./scanpath_data/scanpaths/', file)
     df = pd.read_csv(file_path, delimiter='\t')
     cols = df.columns.to_list()
     df['file'] = file.replace("_scanpath.tsv", "")
     df = df[['file'] + cols]
     return df
-all_files = [i for i in os.listdir('/content/scanpath_data/scanpaths/')]
+
+all_files = [i for i in os.listdir('./scanpath_data/scanpaths/')]
 master_df = get_file_data(all_files[0])
 for i  in  all_files[1:]:
     master_df = pd.concat([master_df, get_file_data(i)])
@@ -22,7 +23,8 @@ all_files = master_df['file'].unique()
 texts = master_df['text_id'].unique()
 persons = master_df['reader_id'].unique()
 
-processed_files = os.listdir("/content/drive/MyDrive/scanpath_data/scanpath_comparisons")
+processed_files = os.listdir("./scanpath_data/scanpath_comparisons")
+
 def get_scanpath(scan_record):
     scanpath = master_df[master_df['file'] == scan_record]
     scanpath = scanpath[['fixation_index', 'fixation_duration', 'next_saccade_duration', 'previous_saccade_duration', 'line', 'char_index_in_line',
@@ -49,10 +51,11 @@ def get_output(filecomb):
     score, path, alignment, path_df  = scp.rscasim(scanpath1, scanpath2, center_x, center_y, distance, unit, modulator=0.83)
     out_dict[filecomb[0] + "_" + filecomb[1]] = alignment
 
-    with open('/content/drive/MyDrive/scanpath_data/scanpath_comparisons/' + filecomb[0] + "_" + filecomb[1] + ".pickle", 'wb') as handle:
+    with open('./scanpath_data/scanpath_comparisons/' + filecomb[0] + "_" + filecomb[1] + ".pickle", 'wb') as handle:
         pickle.dump(out_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 if __name__ == "__main__":
+
     docs = ['p0', 'p1', 'p2', 'p3', 'p4', 'p5', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5']
     for doc in docs :
         files = [i for i in all_files if doc in i]
