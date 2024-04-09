@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-
+import numpy as np
 
 def plot_fixations(axs, scanpath, coordinate, color):
     # Sample data (time, x position, duration)
