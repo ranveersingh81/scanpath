@@ -40,7 +40,7 @@ def get_output(filecomb):
     score, path, alignment, path_df  = scp.rscasim(scanpath1, scanpath2, center_x, center_y, distance, unit, modulator=0.83)
     out_dict[filecomb[0] + "_" + filecomb[1]] = (score, path, alignment, path_df)
 
-    with open('/content/scanpath_data/scanpath_comparisons/' + filecomb[0] + "_" + filecomb[1] + ".pickle", 'wb') as handle:
+    with open('/content/drive/MyDrive/scanpath_data/scanpath_comparisons/' + filecomb[0] + "_" + filecomb[1] + ".pickle", 'wb') as handle:
         pickle.dump(out_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 if __name__ == "__main__":
