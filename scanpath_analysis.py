@@ -63,13 +63,13 @@ if __name__ == "__main__":
         for i in range(file_count):
             for j in range(file_count):
                 if j <=  i:
-                    print((files[i], files[j]))
                     if ((files[i] + "_" + files[j] + ".pickle")not in processed_files) & ((files[j] + "_" + files[i] + ".pickle") not in processed_files):
                         combinations.append((files[i], files[j]))
 
         process = []
         cnt = 0
         for comb in combinations:
+            print(comb)
             process.append(mp.Process(target=get_output, args=(comb,)))
             cnt+=1
             if cnt%9 == 0:
