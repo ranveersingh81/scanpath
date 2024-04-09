@@ -13,7 +13,7 @@ import scanpath as scp
 
 
 def get_file_data(file):
-    file_path = os.path.join('./data/scanpaths/', file)
+    file_path = os.path.join('/content/scanpath_data/scanpaths/', file)
     df = pd.read_csv(file_path, delimiter='\t')
     cols = df.columns.to_list()
     df['file'] = file.replace("_scanpath.tsv", "")
@@ -21,13 +21,13 @@ def get_file_data(file):
     return df
 
 
-files = [i for i in os.listdir('./data/scanpaths/')]
+files = [i for i in os.listdir('/content/scanpath_data/scanpaths/')]
 master_df = get_file_data(files[0])
 
 for i  in  files[1:]:
     master_df = pd.concat([master_df, get_file_data(i)])
 
-reader_data = pd.read_csv("/Users/RSingh81/Documents/personal_projects/scanpath/data/reader_meta_mean_and_per-text.csv")
+reader_data = pd.read_csv("/content/scanpath_data/reader_meta_mean_and_per-text.csv")
 
 
 all_columns = ['file', 'fixation_index', 'text_domain', 'trial', 'acc_bq_1', 'acc_bq_2', 'acc_bq_3', 'acc_tq_1', 'acc_tq_2', 'acc_tq_3',
@@ -96,5 +96,5 @@ if __name__ == "__main__":
                 proc.terminate()
             process.clear()
 
-        with open('output.pickle', 'wb') as handle:
+        with open('/content/drive/MyDrive/scanpath_data/output.pickle', 'wb') as handle:
             pickle.dump(dict(out_dict), handle, protocol=pickle.HIGHEST_PROTOCOL)
