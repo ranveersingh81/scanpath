@@ -1,16 +1,10 @@
-
 import pandas as pd
 import os 
-import math
 import numpy as np
-import matplotlib.pyplot as plt
-import multiprocessing as mp
-import time
-import numpy as np
-import pandas as pd
 import pickle
 import scanpath as scp
-
+from multiprocessing import Pool
+import multiprocessing as mp
 
 def get_file_data(file):
     file_path = os.path.join('/content/scanpath_data/scanpaths/', file)
@@ -20,23 +14,6 @@ def get_file_data(file):
     df = df[['file'] + cols]
     return df
 
-
-files = [i for i in os.listdir('/content/scanpath_data/scanpaths/')]
-master_df = get_file_data(files[0])
-
-for i  in  files[1:]:
-    master_df = pd.concat([master_df, get_file_data(i)])
-
-reader_data = pd.read_csv("/content/scanpath_data/reader_meta_mean_and_per-text.csv")
-
-
-all_columns = ['file', 'fixation_index', 'text_domain', 'trial', 'acc_bq_1', 'acc_bq_2', 'acc_bq_3', 'acc_tq_1', 'acc_tq_2', 'acc_tq_3',
-'fixation_duration', 'next_saccade_duration', 'previous_saccade_duration', 'version', 'line', 'roi', 'char_index_in_line', 
-'original_fixation_index', 'is_fixation_adjusted', 'reader_id', 'text_id', 'fixation_position_x', 'fixation_position_y',
-'word_index_in_text', 'sent_index_in_text', 'char_index_in_text', 'word', 'character', 'text_id_numeric']
-
-
-
 def get_scanpath(scan_record):
     scanpath = master_df[master_df['file'] == scan_record]
     scanpath = scanpath[['fixation_index', 'fixation_duration', 'next_saccade_duration', 'previous_saccade_duration', 'line', 'char_index_in_line',
@@ -45,14 +22,12 @@ def get_scanpath(scan_record):
     scanpath['change_in_word'] = (scanpath['change_in_word_flag'] == 0).cumsum().shift(1).fillna(0)
     scanpath['same_word_next_saccade_duration'] = scanpath['change_in_word_flag']*scanpath['next_saccade_duration']
     scanpath['next_saccade_duration'] = scanpath['next_saccade_duration'] - scanpath['same_word_next_saccade_duration']
-    scanpath['fixation_duration'] = scanpath['same_word_next_saccade_duration'] + scanpath['fixation_duration']
+    # scanpath['fixation_duration'] = scanpath['same_word_next_saccade_duration'] + scanpath['fixation_duration']
     scanpath = scanpath.drop('same_word_next_saccade_duration', axis =1)
     scanpath = scanpath.groupby(['change_in_word', 'word_index_in_text']).aggregate({'fixation_duration':'sum', 'next_saccade_duration':'sum', 'fixation_position_x':'mean', 'fixation_position_y':'mean'}).reset_index()
     scanpath['cum_fixation_duration'] = scanpath['fixation_duration'].cumsum().shift(1).fillna(0)
     scanpath = scanpath.reset_index()
     return scanpath
-
-
 
 def get_output(filecomb):
     out_dict = {}
@@ -65,33 +40,43 @@ def get_output(filecomb):
     score, path, alignment, path_df  = scp.rscasim(scanpath1, scanpath2, center_x, center_y, distance, unit, modulator=0.83)
     out_dict[filecomb[0] + "_" + filecomb[1]] = (score, path, alignment, path_df)
 
-    with open('/content/drive/MyDrive/scanpath_data/scanpath_comparisons/' + filecomb[0] + "_" + filecomb[1] + ".pickle", 'wb') as handle:
+    with open('/content/scanpath_data/scanpath_comparisons/' + filecomb[0] + "_" + filecomb[1] + ".pickle", 'wb') as handle:
         pickle.dump(out_dict, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-
-
 if __name__ == "__main__":
-    files = master_df['file'].unique()
+    all_files = [i for i in os.listdir('/content/scanpath_data/scanpaths/')]
+    master_df = get_file_data(all_files[0])
+    for i  in  all_files[1:]:
+        master_df = pd.concat([master_df, get_file_data(i)])
+
+    all_files = master_df['file'].unique()
     texts = master_df['text_id'].unique()
     persons = master_df['reader_id'].unique()
-    files = files
-    files = [i for i in files if 'p0' in i]
-    file_count = len(files)
-    combinations = []
-    for i in range(file_count):
-        for j in range(file_count):
-            if j <=  i:
-                combinations.append((files[i], files[j]))
-    process = []
-    cnt = 0
-    for comb in combinations:
-        process.append(mp.Process(target=get_output, args=(comb,out_dict)))
-        cnt+=1
-        if cnt%9 == 0:
-            for proc in process:
-                proc.start()
-            for proc in process:
-                proc.join()
-            for proc in process:
-                proc.terminate()
-            process.clear()
+
+    processed_files = os.listdir("/content/drive/MyDrive/scanpath_data/scanpath_comparisons")
+
+    docs = ['p0', 'p1', 'p2', 'p3', 'p4', 'p5', 'b0', 'b1', 'b2', 'b3', 'b4', 'b5']
+    for doc in docs :
+        files = [i for i in all_files if doc in i]
+        file_count = len(files)
+        combinations = []
+        for i in range(file_count):
+            for j in range(file_count):
+                if j <=  i:
+                    print((files[i], files[j]))
+                    if ((files[i] + "_" + files[j] + ".pickle")not in processed_files) & ((files[j] + "_" + files[i] + ".pickle") not in processed_files):
+                        combinations.append((files[i], files[j]))
+
+        process = []
+        cnt = 0
+        for comb in combinations:
+            process.append(mp.Process(target=get_output, args=(comb,)))
+            cnt+=1
+            if cnt%9 == 0:
+                for proc in process:
+                    proc.start()
+                for proc in process:
+                    proc.join()
+                for proc in process:
+                    proc.terminate()
+                process.clear()
