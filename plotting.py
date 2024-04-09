@@ -46,7 +46,7 @@ def plot_alignments_component(axs, scanpath, scanno, coordinate, color):
     # duration = scanpath['fixation_duration'+ "_" + scanno].to_list()
 
     time = list(range(scanpath.shape[0]))
-    duration = np.ones(shape= alignment.shape[0]).tolist()
+    duration = np.ones(shape= scanpath.shape[0]).tolist()
     if coordinate == "y":
         position = scanpath['fixation_position_y'+ "_" + scanno].to_list()
     else:
